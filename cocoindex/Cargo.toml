@@ -1,0 +1,52 @@
+[package]
+name = "cocoindex"
+version = "0.1.0"
+edition = "2021"
+authors = ["CocoIndex Team"]
+description = "CocoIndex Rust SDK - High-performance code indexing and caching"
+license = "MIT"
+repository = "https://github.com/cocoindex-io/cocoindex-rust"
+rust-version = "1.75"
+
+[dependencies]
+# LMDB bindings
+lmdb-rkv = "0.14"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Fingerprint
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# UUID for session IDs
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Walkdir for file traversal
+walkdir = "2"
+
+# Glob pattern matching
+glob = "0.3"
+
+# Proc macros
+cocoindex_macro = { path = "../cocoindex_macro" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+pretty_assertions = "1"
+tempfile = "3"
+
+[[bench]]
+name = "pipeline"
+harness = false
+
+[lib]
+name = "cocoindex"
+path = "src/lib.rs"

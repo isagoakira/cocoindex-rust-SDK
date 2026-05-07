@@ -1,0 +1,78 @@
+# Rust build artifacts
+/target/
+**/target/
+**/*.rlib
+**/*.exe
+**/deps/
+**/incremental/
+**/build/
+
+# Cargo lock (if you want to lock dependencies)
+# Uncomment if you want to commit the lockfile
+# Cargo.lock
+
+# Debug builds
+debug/
+
+# Release builds
+release/
+
+# Temporary test databases (LMDB creates these)
+*.db/
+*.lmdb/
+data/
+
+# Claude harness files (internal scaffolding)
+.claude/
+harness-state.json
+vcs/
+snapshots/
+pending-command.txt
+
+# Harness orchestration management files (not part of the released SDK)
+dev-plan.md
+TODO.md
+main-log.md
+harness-spec.md
+lessons-learned.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.iml
+
+# Rust-specific
+Cargo.lock
+
+# Private/sensitive files
+.env
+.env.*
+*.pem
+*.key
+credentials*
+secrets*
+token*
+*.token
+api_key*
+*.secret
+
+# Personal planning documents (not part of the SDK)
+*计划书.md
+个人笔记/
+personal-*/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
