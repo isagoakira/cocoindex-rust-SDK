@@ -1,6 +1,5 @@
 # CocoIndex Rust SDK
 
-[![crates.io](https://img.shields.io/crates/v/cocoindex.svg)](https://crates.io/crates/cocoindex)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **CocoIndex** is an incremental data sync engine with native Rust SDK support. This crate provides LMDB-backed caching, file fingerprinting for skip-unchanged logic, and procedural macros for ergonomic cache management.
@@ -204,6 +203,5 @@ MIT License — see [LICENSE](LICENSE)
 
 ## Links
 
-- [Crates.io](https://crates.io/crates/cocoindex)
 - [CocoIndex Python SDK](https://github.com/cocoindex-io/cocoindex)
 - [GitHub Repository](https://github.com/cocoindex-io/cocoindex-rust)
