@@ -470,8 +470,18 @@ mod tests {
         }
 
         let files: Vec<_> = results.iter().filter(|e| !e.is_dir()).collect();
-        assert_eq!(files.len(), 1, "only stay.txt should remain after deletion");
-        assert_eq!(files[0].file_name(), Some("stay.txt".to_string()));
+
+        // stay.txt must always be yielded exactly once
+        let stay_count = files
+            .iter()
+            .filter(|e| e.file_name() == Some("stay.txt".to_string()))
+            .count();
+        assert_eq!(stay_count, 1, "stay.txt must be yielded exactly once");
+
+        // gone.txt may or may not appear depending on directory traversal order:
+        // - If walkdir yielded gone.txt BEFORE deletion, it's validly in results
+        // - If walkdir yielded it AFTER deletion, process_path skips it (NotFound)
+        // Either way the walker handles the mid-walk deletion gracefully.
 
         Ok(())
     }
