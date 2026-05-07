@@ -5,11 +5,11 @@
 //!   2. Second walk = 0 files yielded (all fingerprints match)
 //!   3. Modify one file, third walk = only the changed file is yielded
 
+use cocoindex::{cache::Cache, fs, CocoError};
+use lmdb::Environment;
 use std::path::Path;
 use std::sync::Arc;
 use tempfile::tempdir;
-use cocoindex::{fs, cache::Cache, CocoError};
-use lmdb::Environment;
 
 fn open_temp_cache(dir: &Path) -> (Arc<Environment>, Cache) {
     std::fs::create_dir_all(dir).unwrap();
@@ -31,8 +31,14 @@ async fn main() -> anyhow::Result<()> {
     let src_dir = tempdir()?;
     let root = src_dir.path();
 
-    std::fs::write(root.join("main.rs"), "fn main() {\n    println!(\"hello\");\n}\n")?;
-    std::fs::write(root.join("lib.rs"), "pub fn add(a: i32, b: i32) -> i32 { a + b }\n")?;
+    std::fs::write(
+        root.join("main.rs"),
+        "fn main() {\n    println!(\"hello\");\n}\n",
+    )?;
+    std::fs::write(
+        root.join("lib.rs"),
+        "pub fn add(a: i32, b: i32) -> i32 { a + b }\n",
+    )?;
     std::fs::write(root.join("README.md"), "# Example Project\n")?;
 
     // --- Setup: LMDB cache for fingerprint storage ---
@@ -47,9 +53,11 @@ async fn main() -> anyhow::Result<()> {
         .collect::<Result<Vec<_>, CocoError>>()?;
     println!("  Yielded {} files:", entries1.len());
     for entry in &entries1 {
-        println!("    - {}  (fingerprint: {:016x})",
+        println!(
+            "    - {}  (fingerprint: {:016x})",
             entry.path().display(),
-            entry.fingerprint().map(|f| f.content_hash).unwrap_or(0));
+            entry.fingerprint().map(|f| f.content_hash).unwrap_or(0)
+        );
     }
 
     println!("\n=== Walk 2: same content (0 files yielded — all skipped) ===");
@@ -61,7 +69,10 @@ async fn main() -> anyhow::Result<()> {
     println!("  Yielded {} files (expected 0)", entries2.len());
 
     println!("\n=== Modify main.rs ===");
-    std::fs::write(root.join("main.rs"), "fn main() {\n    println!(\"modified!\");\n}\n")?;
+    std::fs::write(
+        root.join("main.rs"),
+        "fn main() {\n    println!(\"modified!\");\n}\n",
+    )?;
 
     println!("\n=== Walk 3: only changed file yielded ===");
     let entries3: Vec<_> = fs::walk(root)
@@ -71,9 +82,11 @@ async fn main() -> anyhow::Result<()> {
         .collect::<Result<Vec<_>, CocoError>>()?;
     println!("  Yielded {} files (expected 1):", entries3.len());
     for entry in &entries3 {
-        println!("    - {}  (fingerprint: {:016x})",
+        println!(
+            "    - {}  (fingerprint: {:016x})",
             entry.path().display(),
-            entry.fingerprint().map(|f| f.content_hash).unwrap_or(0));
+            entry.fingerprint().map(|f| f.content_hash).unwrap_or(0)
+        );
     }
 
     assert_eq!(entries1.len(), 2, "first walk: 2 .rs files");

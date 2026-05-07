@@ -24,14 +24,16 @@ fn test_macro_ui() {
         return;
     }
 
-    let mut tc = trybuild::TestCases::new();
+    let tc = trybuild::TestCases::new();
     for file in files {
-        if file.file_stem()
+        if file
+            .file_stem()
             .map(|s| s.to_str().unwrap_or("").ends_with("_pass"))
             .unwrap_or(false)
         {
             tc.pass(file);
-        } else if file.file_stem()
+        } else if file
+            .file_stem()
             .map(|s| s.to_str().unwrap_or("").ends_with("_fail"))
             .unwrap_or(false)
         {

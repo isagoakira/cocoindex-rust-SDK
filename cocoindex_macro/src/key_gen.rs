@@ -33,11 +33,7 @@ fn generate_key_part(pat: &Pat) -> TokenStream {
             quote!(#name)
         }
         Pat::Tuple(tuple) => {
-            let elems: Vec<TokenStream> = tuple
-                .elems
-                .iter()
-                .map(|p| generate_key_part(p))
-                .collect();
+            let elems: Vec<TokenStream> = tuple.elems.iter().map(generate_key_part).collect();
             quote!( (#(#elems),*) )
         }
         Pat::Struct(struct_pat) => {
@@ -49,11 +45,7 @@ fn generate_key_part(pat: &Pat) -> TokenStream {
             quote!( (#(#fields),*) )
         }
         Pat::Slice(slice) => {
-            let elems: Vec<TokenStream> = slice
-                .elems
-                .iter()
-                .map(|p| generate_key_part(p))
-                .collect();
+            let elems: Vec<TokenStream> = slice.elems.iter().map(generate_key_part).collect();
             quote!( [#(#elems),*] )
         }
         _ => quote!("unknown"),

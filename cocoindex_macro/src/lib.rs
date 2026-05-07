@@ -22,7 +22,9 @@ impl Parse for CachedOptions {
             return Ok(CachedOptions { key_expr: None });
         }
         let key_expr = input.parse()?;
-        Ok(CachedOptions { key_expr: Some(key_expr) })
+        Ok(CachedOptions {
+            key_expr: Some(key_expr),
+        })
     }
 }
 
@@ -60,17 +62,20 @@ fn is_ctx_type(ty: &syn::Type) -> bool {
             // &Ctx or &mut Ctx — unwrap reference and recurse
             is_ctx_type(&type_ref.elem)
         }
-        syn::Type::Path(type_path) if type_path.qself.is_none() => {
-            type_path.path.segments.last()
-                .map(|seg| seg.ident == "Ctx")
-                .unwrap_or(false)
-        }
+        syn::Type::Path(type_path) if type_path.qself.is_none() => type_path
+            .path
+            .segments
+            .last()
+            .map(|seg| seg.ident == "Ctx")
+            .unwrap_or(false),
         _ => false,
     }
 }
 
 /// Find the name of the Ctx parameter in a function's argument list
-fn find_ctx_param_name(fn_args: &syn::punctuated::Punctuated<FnArg, syn::Token![,]>) -> proc_macro2::Ident {
+fn find_ctx_param_name(
+    fn_args: &syn::punctuated::Punctuated<FnArg, syn::Token![,]>,
+) -> proc_macro2::Ident {
     for arg in fn_args.iter() {
         if let FnArg::Typed(pat_type) = arg {
             if is_ctx_type(&pat_type.ty) {
@@ -324,7 +329,9 @@ impl Parse for ComponentOptions {
             return Ok(ComponentOptions { name: None });
         }
         let name_lit: syn::LitStr = input.parse()?;
-        Ok(ComponentOptions { name: Some(name_lit.value()) })
+        Ok(ComponentOptions {
+            name: Some(name_lit.value()),
+        })
     }
 }
 
@@ -355,9 +362,7 @@ pub fn component(attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_generics = &input_fn.sig.generics;
     let fn_where = &input_fn.sig.generics.where_clause.clone();
 
-    let component_name = options
-        .name
-        .unwrap_or_else(|| fn_name.to_string());
+    let component_name = options.name.unwrap_or_else(|| fn_name.to_string());
 
     // Find Ctx parameter name for stats access
     let ctx_name = find_ctx_param_name(fn_args);

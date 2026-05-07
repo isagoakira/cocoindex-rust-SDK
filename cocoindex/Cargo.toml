@@ -36,7 +36,7 @@ walkdir = "2"
 glob = "0.3"
 
 # Proc macros
-cocoindex_macro = { path = "../cocoindex_macro" }
+cocoindex_macro = { path = "../cocoindex_macro", version = "0.1.0" }
 
 [dev-dependencies]
 tokio-test = "0.4"

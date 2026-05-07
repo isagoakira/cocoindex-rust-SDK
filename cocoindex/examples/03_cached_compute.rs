@@ -6,8 +6,8 @@
 //!   3. Second call with same arguments = cache hit, function body skipped
 //!   4. Inspect RunStats to observe cache_hits vs cache_misses
 
+use cocoindex::{App, CocoError, Ctx};
 use serde::{Deserialize, Serialize};
-use cocoindex::{App, Ctx, CocoError};
 
 /// The result of our cached computation.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -67,44 +67,49 @@ async fn main() -> anyhow::Result<()> {
     let app = App::open("cached-compute", db_dir.path())?;
     println!("CocoIndex cached compute example\n");
 
-    let (_, stats) = app.run(|ctx| async move {
-        // --- Cold calls ---
-        println!("--- Cold cache (first calls) ---");
-        let fib10 = compute_fibonacci(&ctx, 10).await?;
-        let fib20 = compute_fibonacci(&ctx, 20).await?;
-        let analysis = analyze_number(&ctx, 42, "answer").await?;
-        println!("  fibonacci(10) = {}", fib10);
-        println!("  fibonacci(20) = {}", fib20);
-        println!("  analysis      = {:?}", analysis);
+    let (_, stats) = app
+        .run(|ctx| async move {
+            // --- Cold calls ---
+            println!("--- Cold cache (first calls) ---");
+            let fib10 = compute_fibonacci(&ctx, 10).await?;
+            let fib20 = compute_fibonacci(&ctx, 20).await?;
+            let analysis = analyze_number(&ctx, 42, "answer").await?;
+            println!("  fibonacci(10) = {}", fib10);
+            println!("  fibonacci(20) = {}", fib20);
+            println!("  analysis      = {:?}", analysis);
 
-        // --- Hot calls (same arguments = cache hits) ---
-        println!("\n--- Warm cache (cache hits expected) ---");
-        let fib10_cached = compute_fibonacci(&ctx, 10).await?;
-        let fib20_cached = compute_fibonacci(&ctx, 20).await?;
-        let analysis_cached = analyze_number(&ctx, 42, "answer").await?;
-        println!("  fibonacci(10) = {} (from cache)", fib10_cached);
-        println!("  fibonacci(20) = {} (from cache)", fib20_cached);
-        println!("  analysis      = {:?} (from cache)", analysis_cached);
+            // --- Hot calls (same arguments = cache hits) ---
+            println!("\n--- Warm cache (cache hits expected) ---");
+            let fib10_cached = compute_fibonacci(&ctx, 10).await?;
+            let fib20_cached = compute_fibonacci(&ctx, 20).await?;
+            let analysis_cached = analyze_number(&ctx, 42, "answer").await?;
+            println!("  fibonacci(10) = {} (from cache)", fib10_cached);
+            println!("  fibonacci(20) = {} (from cache)", fib20_cached);
+            println!("  analysis      = {:?} (from cache)", analysis_cached);
 
-        // Verify values match
-        assert_eq!(fib10, fib10_cached);
-        assert_eq!(fib20, fib20_cached);
-        assert_eq!(analysis, analysis_cached);
+            // Verify values match
+            assert_eq!(fib10, fib10_cached);
+            assert_eq!(fib20, fib20_cached);
+            assert_eq!(analysis, analysis_cached);
 
-        println!("\n--- Stats from ctx ---");
-        let s = ctx.stats();
-        println!("  cache_hits:   {}", s.cache_hits);
-        println!("  cache_misses: {}", s.cache_misses);
-        println!("  files_processed: {}", s.files_processed);
+            println!("\n--- Stats from ctx ---");
+            let s = ctx.stats();
+            println!("  cache_hits:   {}", s.cache_hits);
+            println!("  cache_misses: {}", s.cache_misses);
+            println!("  files_processed: {}", s.files_processed);
 
-        Ok(())
-    }).await?;
+            Ok(())
+        })
+        .await?;
 
     println!("\n--- Final stats ---");
     println!("  cache_hits:   {}", stats.cache_hits);
     println!("  cache_misses: {}", stats.cache_misses);
     assert!(stats.cache_hits >= 2, "should have at least 2 cache hits");
-    assert!(stats.cache_misses >= 2, "should have at least 2 cache misses");
+    assert!(
+        stats.cache_misses >= 2,
+        "should have at least 2 cache misses"
+    );
 
     println!("\nAll assertions passed — cached macro is working correctly!");
     Ok(())

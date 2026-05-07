@@ -21,18 +21,20 @@ async fn main() -> anyhow::Result<()> {
 
     // app.run() creates a session with a fresh Ctx and shared RunStats.
     // The closure receives &Ctx and can perform any cached operations.
-    let (result, stats) = app.run(|ctx| async move {
-        // --- Cache basic read/write ---
-        ctx.cache_set("greeting", b"Hello from CocoIndex!")?;
-        let value = ctx.cache_get("greeting")?;
-        let value_bytes = value.unwrap_or_default();
-        let text = String::from_utf8_lossy(&value_bytes);
-        println!("Cached value: {}", text);
+    let (result, stats) = app
+        .run(|ctx| async move {
+            // --- Cache basic read/write ---
+            ctx.cache_set("greeting", b"Hello from CocoIndex!")?;
+            let value = ctx.cache_get("greeting")?;
+            let value_bytes = value.unwrap_or_default();
+            let text = String::from_utf8_lossy(&value_bytes);
+            println!("Cached value: {}", text);
 
-        // --- The Ctx also exposes read_file / read_file_bytes ---
-        // (not used here, see examples 02 and 03)
-        Ok("all good")
-    }).await?;
+            // --- The Ctx also exposes read_file / read_file_bytes ---
+            // (not used here, see examples 02 and 03)
+            Ok("all good")
+        })
+        .await?;
 
     // --- Inspect statistics ---
     println!("\nResult: {}", result);

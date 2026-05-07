@@ -42,27 +42,21 @@ Demonstrates the `#[cocoindex::cached]` procedural macro with:
 - Custom struct return types (Serialize + Deserialize)
 - Cold vs warm cache behavior and RunStats inspection
 
-### 04 - Multi-Codebase
-`03_multi_codebase.rs`
-
-Shows how to index multiple codebases using a shared CocoIndex app. Includes:
-- Walking multiple project paths
-- Extension filtering (.rs files)
-- Statistics collection
-
-### 05 - With LLM (placeholder)
+### 04 - With LLM
 `04_with_llm.rs`
 
-Placeholder for future LLM workflow integration examples.
+Demonstrates LLM API call caching using `#[cocoindex::cached]`:
+- Simulates expensive LLM API calls with automatic result caching
+- Same prompts hit cache (no redundant API calls)
+- Different model names create separate cache entries
+- Cache hit/miss statistics via RunStats
 
 ## Running Examples
 
 ```bash
-# Run a specific example
 cargo run --example 01_hello_cocoindex
 cargo run --example 02_code_walk
 cargo run --example 03_cached_compute
-cargo run --example 03_multi_codebase
 cargo run --example 04_with_llm
 ```
 

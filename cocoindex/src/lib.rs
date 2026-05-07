@@ -21,19 +21,19 @@
 
 // Public API re-exports
 pub mod app;
+pub mod cache;
 pub mod ctx;
 pub mod error;
 pub mod fs;
-pub mod cache;
 pub mod macros;
 pub mod stats;
 
 pub use app::App;
 pub use ctx::Ctx;
 pub use error::CocoError;
-pub use fs::{WalkBuilder, FileEntry, Fingerprint};
-pub use stats::RunStats;
+pub use fs::{FileEntry, Fingerprint, WalkBuilder};
 pub use macros::{cached, component};
+pub use stats::RunStats;
 
 /// Result type alias using CocoError
 pub type Result<T> = std::result::Result<T, CocoError>;

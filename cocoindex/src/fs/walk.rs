@@ -51,7 +51,10 @@ impl Fingerprint {
     pub fn from_content(content: &[u8]) -> Self {
         let content_hash = xxh3_64(content);
         let code_hash = Self::compute_code_hash(content);
-        Fingerprint { content_hash, code_hash }
+        Fingerprint {
+            content_hash,
+            code_hash,
+        }
     }
 
     /// Compute code hash from content (structure-based).
@@ -92,7 +95,10 @@ impl Fingerprint {
         }
         let content_hash = u64::from_le_bytes(bytes[..8].try_into().ok()?);
         let code_hash = u64::from_le_bytes(bytes[8..].try_into().ok()?);
-        Some(Fingerprint { content_hash, code_hash })
+        Some(Fingerprint {
+            content_hash,
+            code_hash,
+        })
     }
 }
 
@@ -110,7 +116,7 @@ pub struct FileEntry {
 
 impl FileEntry {
     /// Get the path.
-    pub fn path(&self) -> &PathBuf {
+    pub fn path(&self) -> &Path {
         &self.path
     }
 
@@ -140,7 +146,9 @@ impl FileEntry {
 
     /// Get file name as string.
     pub fn file_name(&self) -> Option<String> {
-        self.path.file_name().and_then(|n| n.to_str().map(String::from))
+        self.path
+            .file_name()
+            .and_then(|n| n.to_str().map(String::from))
     }
 }
 
@@ -205,7 +213,9 @@ impl WalkBuilder {
     /// No fingerprint caching is used — every file is always yielded.
     /// Use [`walk_with_ctx`](Self::walk_with_ctx) for skip-unchanged behaviour.
     pub fn build(self) -> WalkIter<'static> {
-        let compiled = self.glob_pattern.as_ref()
+        let compiled = self
+            .glob_pattern
+            .as_ref()
             .and_then(|p| glob::Pattern::new(p).ok());
         WalkIter {
             root: self.root,
@@ -226,10 +236,9 @@ impl WalkBuilder {
     pub fn walk_with_cache<'a>(self, cache: &'a Cache) -> Result<WalkIter<'a>> {
         let compiled = match self.glob_pattern {
             None => None,
-            Some(ref p) => Some(
-                glob::Pattern::new(p)
-                    .map_err(|e| crate::CocoError::User(format!("invalid glob pattern '{}': {}", p, e)))?
-            ),
+            Some(ref p) => Some(glob::Pattern::new(p).map_err(|e| {
+                crate::CocoError::User(format!("invalid glob pattern '{}': {}", p, e))
+            })?),
         };
         Ok(WalkIter {
             root: self.root,
@@ -251,10 +260,9 @@ impl WalkBuilder {
     pub fn walk_with_ctx<'a>(self, ctx: &'a Ctx) -> Result<WalkIter<'a>> {
         let compiled = match self.glob_pattern {
             None => None,
-            Some(ref p) => Some(
-                glob::Pattern::new(p)
-                    .map_err(|e| crate::CocoError::User(format!("invalid glob pattern '{}': {}", p, e)))?
-            ),
+            Some(ref p) => Some(glob::Pattern::new(p).map_err(|e| {
+                crate::CocoError::User(format!("invalid glob pattern '{}': {}", p, e))
+            })?),
         };
         Ok(WalkIter {
             root: self.root,
@@ -301,26 +309,27 @@ impl<'a> Iterator for WalkIter<'a> {
                 match self.process_path(&path) {
                     Some(Ok(entry)) => return Some(Ok(entry)),
                     Some(Err(e)) => return Some(Err(e)),
-                    None => continue,  // skipped (unchanged or filtered)
+                    None => continue, // skipped (unchanged or filtered)
                 }
             }
 
             // Get next entry from the directory walker
-            let walker = self.walker.get_or_insert_with(|| {
-                WalkDir::new(&self.root)
-                    .follow_links(false)
-                    .into_iter()
-            });
+            let walker = self
+                .walker
+                .get_or_insert_with(|| WalkDir::new(&self.root).follow_links(false).into_iter());
 
             let entry = match walker.next() {
                 Some(Ok(e)) => e,
                 Some(Err(e)) => {
                     // Skip permission errors and continue
-                    if e.io_error().map(|e| e.kind() == io::ErrorKind::PermissionDenied).unwrap_or(false) {
+                    if e.io_error()
+                        .map(|e| e.kind() == io::ErrorKind::PermissionDenied)
+                        .unwrap_or(false)
+                    {
                         continue;
                     }
                     let err_msg = format!("walkdir error: {}", e);
-                    return Some(Err(crate::CocoError::User(err_msg).into()));
+                    return Some(Err(crate::CocoError::User(err_msg)));
                 }
                 None => return None,
             };
@@ -364,7 +373,7 @@ impl<'a> WalkIter<'a> {
                 if e.kind() == io::ErrorKind::PermissionDenied {
                     return None;
                 }
-                return Some(Err(crate::CocoError::Io(e).into()));
+                return Some(Err(crate::CocoError::Io(e)));
             }
         };
 
@@ -415,7 +424,9 @@ impl<'a> WalkIter<'a> {
 
         // Attempt to retrieve the cached fingerprint (if cache is available)
         let cached_fp: Option<Fingerprint> = self.cache.and_then(|c| {
-            c.get(&cache_key).ok().flatten()
+            c.get(&cache_key)
+                .ok()
+                .flatten()
                 .and_then(|bytes| Fingerprint::from_bytes(&bytes))
         });
 
@@ -429,7 +440,7 @@ impl<'a> WalkIter<'a> {
                 if e.kind() == io::ErrorKind::PermissionDenied {
                     return None;
                 }
-                return Some(Err(crate::CocoError::Io(e).into()));
+                return Some(Err(crate::CocoError::Io(e)));
             }
         };
 

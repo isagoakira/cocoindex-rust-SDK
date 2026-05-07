@@ -5,6 +5,10 @@ edition = "2021"
 authors = ["CocoIndex Team"]
 description = "Procedural macros for CocoIndex"
 license = "MIT"
+documentation = "https://docs.rs/cocoindex_macro"
+homepage = "https://github.com/cocoindex-io/cocoindex-rust"
+repository = "https://github.com/cocoindex-io/cocoindex-rust"
+rust-version = "1.75"
 
 [dependencies]
 proc-macro2 = "1"

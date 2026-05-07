@@ -5,13 +5,13 @@
 
 #[cfg(test)]
 mod tests {
+    use cocoindex::cache::Cache;
+    use cocoindex::fs;
+    use cocoindex::App;
+    use lmdb::Environment;
     use std::path::Path;
     use std::sync::Arc;
     use tempfile::tempdir;
-    use cocoindex::App;
-    use cocoindex::fs;
-    use cocoindex::cache::Cache;
-    use lmdb::Environment;
 
     /// Helper: open a temporary LMDB environment + cache.
     fn open_temp_cache(dir: &Path) -> (Arc<Environment>, Cache) {
@@ -22,7 +22,7 @@ mod tests {
                 .set_max_dbs(16)
                 .set_max_readers(8)
                 .open(dir)
-                .unwrap()
+                .unwrap(),
         );
         let cache = Cache::open(&env).unwrap();
         (env, cache)
@@ -71,7 +71,11 @@ mod tests {
         let results: Vec<_> = fs::walk(root)
             .walk_with_cache(&cache)?
             .collect::<std::result::Result<Vec<_>, _>>()?;
-        assert_eq!(results.len(), 0, "second walk with same content should yield 0 files");
+        assert_eq!(
+            results.len(),
+            0,
+            "second walk with same content should yield 0 files"
+        );
         Ok(())
     }
 
@@ -116,41 +120,46 @@ mod tests {
         let app = App::open("test_ctx", db_dir.path())?;
 
         let root2 = root.to_path_buf();
-        let (_, stats) = app.run(move |ctx| async move {
-            let ctx_local = &ctx;
+        let (_, stats) = app
+            .run(move |ctx| async move {
+                let ctx_local = &ctx;
 
-            // First walk: 3 files yielded
-            let results: Vec<_> = fs::walk(&root2)
-                .walk_with_ctx(ctx_local)?
-                .collect::<std::result::Result<Vec<_>, _>>()?;
-            assert_eq!(results.len(), 3, "first walk should yield 3 files");
+                // First walk: 3 files yielded
+                let results: Vec<_> = fs::walk(&root2)
+                    .walk_with_ctx(ctx_local)?
+                    .collect::<std::result::Result<Vec<_>, _>>()?;
+                assert_eq!(results.len(), 3, "first walk should yield 3 files");
 
-            // Second walk: same content -> 0 files yielded (all skipped)
-            let results: Vec<_> = fs::walk(&root2)
-                .walk_with_ctx(ctx_local)?
-                .collect::<std::result::Result<Vec<_>, _>>()?;
-            assert_eq!(results.len(), 0, "second walk should yield 0 files");
+                // Second walk: same content -> 0 files yielded (all skipped)
+                let results: Vec<_> = fs::walk(&root2)
+                    .walk_with_ctx(ctx_local)?
+                    .collect::<std::result::Result<Vec<_>, _>>()?;
+                assert_eq!(results.len(), 0, "second walk should yield 0 files");
 
-            // Modify one file
-            std::fs::write(root2.join("b.txt"), b"modified")?;
+                // Modify one file
+                std::fs::write(root2.join("b.txt"), b"modified")?;
 
-            // Third walk: 1 modified file yielded
-            let results: Vec<_> = fs::walk(&root2)
-                .walk_with_ctx(ctx_local)?
-                .collect::<std::result::Result<Vec<_>, _>>()?;
-            assert_eq!(results.len(), 1, "third walk should yield 1 modified file");
-            assert_eq!(results[0].file_name(), Some("b.txt".to_string()));
+                // Third walk: 1 modified file yielded
+                let results: Vec<_> = fs::walk(&root2)
+                    .walk_with_ctx(ctx_local)?
+                    .collect::<std::result::Result<Vec<_>, _>>()?;
+                assert_eq!(results.len(), 1, "third walk should yield 1 modified file");
+                assert_eq!(results[0].file_name(), Some("b.txt".to_string()));
 
-            // Stats: each walk processes ALL files (fingerprinted), regardless of skip
-            // Walk 1: 3 files processed, 3 yielded
-            // Walk 2: 3 files processed, 0 yielded (all skipped)
-            // Walk 3: 3 files processed, 1 yielded (1 changed, 2 skipped)
-            // Total files_processed = 9
-            let s = ctx_local.stats();
-            assert_eq!(s.files_processed, 9, "should have processed 9 files total (3 per walk)");
+                // Stats: each walk processes ALL files (fingerprinted), regardless of skip
+                // Walk 1: 3 files processed, 3 yielded
+                // Walk 2: 3 files processed, 0 yielded (all skipped)
+                // Walk 3: 3 files processed, 1 yielded (1 changed, 2 skipped)
+                // Total files_processed = 9
+                let s = ctx_local.stats();
+                assert_eq!(
+                    s.files_processed, 9,
+                    "should have processed 9 files total (3 per walk)"
+                );
 
-            Ok(())
-        }).await?;
+                Ok(())
+            })
+            .await?;
 
         // Also verify via the returned stats
         assert_eq!(stats.files_processed, 9);
@@ -299,7 +308,8 @@ mod tests {
             let s = ctx.stats();
             assert_eq!(s.files_processed, 2);
             Ok(())
-        }).await?;
+        })
+        .await?;
 
         Ok(())
     }
@@ -331,9 +341,13 @@ mod tests {
             .extension("rs")
             .walk_with_cache(&cache1)?
             .collect::<std::result::Result<Vec<_>, _>>()?;
-        let fp_a1 = results1.iter().find(|e| e.file_name() == Some("a.rs".into()))
+        let fp_a1 = results1
+            .iter()
+            .find(|e| e.file_name() == Some("a.rs".into()))
             .and_then(|e| e.fingerprint().cloned());
-        let fp_b1 = results1.iter().find(|e| e.file_name() == Some("b.rs".into()))
+        let fp_b1 = results1
+            .iter()
+            .find(|e| e.file_name() == Some("b.rs".into()))
             .and_then(|e| e.fingerprint().cloned());
         assert!(fp_a1.is_some(), "a.rs should have a fingerprint");
         assert!(fp_b1.is_some(), "b.rs should have a fingerprint");
@@ -343,9 +357,13 @@ mod tests {
             .glob("*.rs")
             .walk_with_cache(&cache2)?
             .collect::<std::result::Result<Vec<_>, _>>()?;
-        let fp_a2 = results2.iter().find(|e| e.file_name() == Some("a.rs".into()))
+        let fp_a2 = results2
+            .iter()
+            .find(|e| e.file_name() == Some("a.rs".into()))
             .and_then(|e| e.fingerprint().cloned());
-        let fp_b2 = results2.iter().find(|e| e.file_name() == Some("b.rs".into()))
+        let fp_b2 = results2
+            .iter()
+            .find(|e| e.file_name() == Some("b.rs".into()))
             .and_then(|e| e.fingerprint().cloned());
 
         // Fingerprints should be identical regardless of filter used
@@ -371,7 +389,10 @@ mod tests {
 
         let mut iter = fs::walk(bogus).walk_with_cache(&cache)?;
         let result = iter.next();
-        assert!(result.is_some(), "walking non-existent dir should yield an error");
+        assert!(
+            result.is_some(),
+            "walking non-existent dir should yield an error"
+        );
         assert!(result.unwrap().is_err(), "should be an Err variant");
 
         Ok(())

@@ -1,7 +1,6 @@
 //! Integration tests for CocoIndex
 
 use cocoindex::{App, Result};
-use std::path::Path;
 use tempfile::TempDir;
 
 #[tokio::test]
@@ -48,12 +47,13 @@ async fn test_app_run() -> Result<()> {
 
     let app = App::open("run_test", &db_path)?;
 
-    let (result, stats) = app.run(|_ctx| async move {
-        Ok("success".to_string())
-    }).await?;
+    let (result, stats) = app
+        .run(|_ctx| async move { Ok("success".to_string()) })
+        .await?;
 
     assert_eq!(result, "success");
-    assert!(stats.elapsed_ms >= 0);
+    // elapsed should be a small positive number
+    assert!(stats.elapsed_ms < 60000, "should complete within 60s");
 
     Ok(())
 }
@@ -68,13 +68,15 @@ async fn test_ctx_read_file() -> Result<()> {
     tokio::fs::write(&test_file, "Hello, CocoIndex!").await?;
 
     let app = App::open("ctx_test", &db_path)?;
-    let (content, stats) = app.run(|ctx| async move {
-        let content = ctx.read_file(&test_file).await?;
-        Ok(content)
-    }).await?;
+    let (content, stats) = app
+        .run(|ctx| async move {
+            let content = ctx.read_file(&test_file).await?;
+            Ok(content)
+        })
+        .await?;
 
     assert_eq!(content, "Hello, CocoIndex!");
-    assert!(stats.elapsed_ms >= 0);
+    assert!(stats.elapsed_ms < 60000, "should complete within 60s");
 
     Ok(())
 }
@@ -84,7 +86,10 @@ fn test_error_types() {
     use cocoindex::CocoError;
 
     // Test IO error
-    let io_err = CocoError::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "file not found"));
+    let io_err = CocoError::Io(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "file not found",
+    ));
     assert!(matches!(io_err, CocoError::Io(_)));
     assert!(io_err.to_string().contains("file not found"));
 
@@ -94,7 +99,9 @@ fn test_error_types() {
     assert!(lmdb_err.to_string().contains("database corrupted"));
 
     // Test Serde error
-    let serde_err: CocoError = serde_json::from_slice::<serde_json::Value>(b"invalid").unwrap_err().into();
+    let serde_err: CocoError = serde_json::from_slice::<serde_json::Value>(b"invalid")
+        .unwrap_err()
+        .into();
     assert!(matches!(serde_err, CocoError::Serde(_)));
 
     // Test User error

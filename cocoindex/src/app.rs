@@ -1,12 +1,12 @@
 //! Application structure for CocoIndex
 
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use lmdb::Environment;
-use crate::Ctx;
 use crate::cache::Cache;
 use crate::stats::RunStats;
+use crate::Ctx;
 use crate::Result;
+use lmdb::Environment;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 /// App is the main entry point for CocoIndex
 pub struct App {
@@ -35,7 +35,11 @@ impl App {
         let cache = Cache::open(&env)?;
 
         eprintln!("Opened CocoIndex '{}' at {:?}", name, db_path);
-        Ok(App { env, cache, db_path: db_path.to_path_buf() })
+        Ok(App {
+            env,
+            cache,
+            db_path: db_path.to_path_buf(),
+        })
     }
 
     /// Run a task with the given context

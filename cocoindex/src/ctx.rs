@@ -1,12 +1,12 @@
 //! Context structure for CocoIndex
 
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use uuid::Uuid;
-use lmdb::Environment;
 use crate::cache::Cache;
 use crate::stats::RunStats;
 use crate::Result;
+use lmdb::Environment;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+use uuid::Uuid;
 
 /// Ctx provides runtime context for indexed code operations
 pub struct Ctx {
@@ -43,7 +43,7 @@ impl Ctx {
 
     /// Read a file as bytes
     pub async fn read_file_bytes(&self, path: &Path) -> Result<Vec<u8>> {
-        tokio::fs::read(path).await.map_err(|e| crate::CocoError::Io(e))
+        tokio::fs::read(path).await.map_err(crate::CocoError::Io)
     }
 
     /// Get the session ID
